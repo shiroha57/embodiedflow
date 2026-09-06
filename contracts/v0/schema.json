@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://embodiedflow.local/contracts/v0/schema.json",
+  "title": "EmbodiedFlow canonical episode contract v0.1",
+  "description": "Frozen manifest contract for aligned robot, camera, and action trajectories.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "episode_id",
+    "created_at",
+    "source",
+    "robot",
+    "task",
+    "timebase",
+    "camera",
+    "artifacts",
+    "outcome",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "episode_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "source": {"enum": ["direct_writer", "rosbag2"]},
+    "robot": {"$ref": "#/$defs/robot"},
+    "task": {"$ref": "#/$defs/task"},
+    "timebase": {"$ref": "#/$defs/timebase"},
+    "camera": {"$ref": "#/$defs/camera"},
+    "artifacts": {"$ref": "#/$defs/artifacts"},
+    "outcome": {"$ref": "#/$defs/outcome"},
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "$defs": {
+    "robot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "model", "joint_names", "gripper"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "joint_names": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "gripper": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "command_semantics", "open_position", "closed_position"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "command_semantics": {"const": "position"},
+            "open_position": {"type": "number"},
+            "closed_position": {"type": "number"}
+          }
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "seed", "object_id", "target_id"],
+      "properties": {
+        "name": {"const": "pick_and_place"},
+        "seed": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+        "object_id": {"type": "string", "minLength": 1},
+        "target_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "timebase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clock", "unit", "start_ns"],
+      "properties": {
+        "clock": {"enum": ["simulation", "ros", "system"]},
+        "unit": {"const": "nanoseconds"},
+        "start_ns": {"type": "integer", "minimum": 0}
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "frame_id", "width", "height", "intrinsics", "extrinsics"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "frame_id": {"type": "string", "minLength": 1},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1},
+        "intrinsics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["matrix", "distortion_model", "distortion_coefficients"],
+          "properties": {
+            "matrix": {
+              "description": "Row-major 3x3 pinhole K matrix in pixels.",
+              "type": "array",
+              "minItems": 9,
+              "maxItems": 9,
+              "items": {"type": "number"}
+            },
+            "distortion_model": {"enum": ["none", "plumb_bob", "rational_polynomial"]},
+            "distortion_coefficients": {
+              "type": "array",
+              "items": {"type": "number"}
+            }
+          }
+        },
+        "extrinsics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parent_frame", "child_frame", "matrix"],
+          "properties": {
+            "parent_frame": {"type": "string", "minLength": 1},
+            "child_frame": {"type": "string", "minLength": 1},
+            "matrix": {
+              "description": "Row-major 4x4 transform T_parent_child in metres.",
+              "type": "array",
+              "minItems": 16,
+              "maxItems": 16,
+              "items": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+    "ndarray": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "dtype", "shape", "semantic"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+\\.npy$"},
+        "dtype": {"enum": ["uint8", "uint16", "int32", "int64", "float32", "float64"]},
+        "shape": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "semantic": {"type": "string", "minLength": 1},
+        "encoding": {"type": "string", "minLength": 1},
+        "unit": {"type": "string", "minLength": 1},
+        "frame_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "video": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "media_type", "frame_count", "fps"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+\\.mp4$"},
+        "media_type": {"const": "video/mp4"},
+        "frame_count": {"type": "integer", "minimum": 1},
+        "fps": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timestamps", "observations", "actions"],
+      "properties": {
+        "timestamps": {"$ref": "#/$defs/ndarray"},
+        "observations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rgb", "depth", "joint_position", "joint_velocity", "gripper_position"],
+          "properties": {
+            "rgb": {"$ref": "#/$defs/ndarray"},
+            "depth": {"$ref": "#/$defs/ndarray"},
+            "joint_position": {"$ref": "#/$defs/ndarray"},
+            "joint_velocity": {"$ref": "#/$defs/ndarray"},
+            "gripper_position": {"$ref": "#/$defs/ndarray"}
+          }
+        },
+        "actions": {"$ref": "#/$defs/ndarray"},
+        "video": {"$ref": "#/$defs/video"}
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "num_steps", "duration_ns", "termination"],
+      "properties": {
+        "success": {"type": "boolean"},
+        "num_steps": {"type": "integer", "minimum": 1},
+        "duration_ns": {"type": "integer", "minimum": 0},
+        "termination": {"enum": ["success", "timeout", "safety_stop", "error", "user"]}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "producer_version", "git_revision", "input_uri"],
+      "properties": {
+        "producer": {"type": "string", "minLength": 1},
+        "producer_version": {"type": "string", "minLength": 1},
+        "git_revision": {"type": ["string", "null"]},
+        "input_uri": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
+

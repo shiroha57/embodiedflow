@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "embodiedflow-5090"
+version = "0.1.0"
+description = "EmbodiedFlow headless simulation, canonical dataset, and ROS 2 control plane"
+requires-python = ">=3.10"
+dependencies = [
+  "jsonschema>=4.10,<5",
+  "numpy>=1.24,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7,<9"]
+
+[project.scripts]
+embodiedflow-validate = "embodiedflow.contracts.validator:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
