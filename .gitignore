@@ -9,3 +9,6 @@ dist/
 outputs/
 logs/
 
+artifacts/
+reports/
+data/

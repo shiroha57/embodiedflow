@@ -1,0 +1,169 @@
+{
+  "schema_version": "0.1.0",
+  "episode_id": "overfit-000007",
+  "created_at": "2026-09-07T00:00:00Z",
+  "source": "direct_writer",
+  "robot": {
+    "name": "ur5e_robotiq_2f85",
+    "model": "Universal Robots UR5e + Robotiq 2F-85",
+    "joint_names": [
+      "shoulder_pan_joint",
+      "shoulder_lift_joint",
+      "elbow_joint",
+      "wrist_1_joint",
+      "wrist_2_joint",
+      "wrist_3_joint"
+    ],
+    "gripper": {
+      "name": "robotiq_2f85",
+      "command_semantics": "position",
+      "open_position": 0.085,
+      "closed_position": 0.0
+    }
+  },
+  "task": {
+    "name": "pick_and_place",
+    "seed": 1007,
+    "object_id": "cube",
+    "target_id": "target_bin"
+  },
+  "timebase": {
+    "clock": "simulation",
+    "unit": "nanoseconds",
+    "start_ns": 0
+  },
+  "camera": {
+    "name": "wrist_rgbd",
+    "frame_id": "camera_optical_frame",
+    "width": 32,
+    "height": 32,
+    "intrinsics": {
+      "matrix": [
+        16.0,
+        0.0,
+        15.5,
+        0.0,
+        16.0,
+        15.5,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "distortion_model": "none",
+      "distortion_coefficients": []
+    },
+    "extrinsics": {
+      "parent_frame": "world",
+      "child_frame": "camera_optical_frame",
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.7,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.1,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  "artifacts": {
+    "timestamps": {
+      "path": "data/timestamps_ns.npy",
+      "dtype": "int64",
+      "shape": [
+        40
+      ],
+      "semantic": "aligned_sample_timestamp",
+      "unit": "ns"
+    },
+    "observations": {
+      "rgb": {
+        "path": "data/rgb.npy",
+        "dtype": "uint8",
+        "shape": [
+          40,
+          32,
+          32,
+          3
+        ],
+        "semantic": "camera_rgb",
+        "encoding": "rgb8",
+        "frame_id": "camera_optical_frame"
+      },
+      "depth": {
+        "path": "data/depth.npy",
+        "dtype": "float32",
+        "shape": [
+          40,
+          32,
+          32
+        ],
+        "semantic": "camera_depth",
+        "encoding": "32FC1",
+        "unit": "m",
+        "frame_id": "camera_optical_frame"
+      },
+      "joint_position": {
+        "path": "data/joint_position.npy",
+        "dtype": "float32",
+        "shape": [
+          40,
+          6
+        ],
+        "semantic": "joint_position",
+        "unit": "rad"
+      },
+      "joint_velocity": {
+        "path": "data/joint_velocity.npy",
+        "dtype": "float32",
+        "shape": [
+          40,
+          6
+        ],
+        "semantic": "joint_velocity",
+        "unit": "rad/s"
+      },
+      "gripper_position": {
+        "path": "data/gripper_position.npy",
+        "dtype": "float32",
+        "shape": [
+          40,
+          1
+        ],
+        "semantic": "gripper_width",
+        "unit": "m"
+      }
+    },
+    "actions": {
+      "path": "data/actions.npy",
+      "dtype": "float32",
+      "shape": [
+        40,
+        7
+      ],
+      "semantic": "joint_position_plus_gripper_width",
+      "unit": "rad,m"
+    }
+  },
+  "outcome": {
+    "success": true,
+    "num_steps": 40,
+    "duration_ns": 1299999987,
+    "termination": "success"
+  },
+  "provenance": {
+    "producer": "tools/make_overfit_fixture.py",
+    "producer_version": "0.1.0",
+    "git_revision": null,
+    "input_uri": null
+  }
+}
