@@ -195,3 +195,22 @@ def test_dataset_contains_only_given_episodes():
     train_ds = CanonicalEpisodeDataset(FIXTURE_DIRS[:10], DatasetConfig())
     ids = {s["episode_id"] for s in (train_ds[i] for i in range(len(train_ds)))}
     assert ids == {p.name for p in FIXTURE_DIRS[:10]}
+
+
+def test_chunk_never_crosses_episode_boundary():
+    """Every anchor's chunk stays inside its own episode: mask covers exactly
+    the remaining in-episode steps, padding entries are zero, and the valid
+    prefix matches the episode actions verbatim."""
+    ds = CanonicalEpisodeDataset(FIXTURE_DIRS, DatasetConfig(chunk_len=20))
+    for episode_idx, episode in enumerate(ds.episodes):
+        actions = episode.actions()
+        for start in range(0, episode.num_steps, ds.cfg.window_stride):
+            sample = ds[ds.index.index((episode_idx, start))]
+            expected_valid = min(ds.cfg.chunk_len, episode.num_steps - start)
+            assert sample["step_idx"] == start
+            assert sample["padding_mask"].sum() == expected_valid
+            assert np.all(sample["padding_mask"][expected_valid:] == 0.0)
+            assert np.all(sample["action_chunk"][expected_valid:] == 0.0)
+            assert np.array_equal(
+                sample["action_chunk"][:expected_valid], actions[start : start + expected_valid]
+            )

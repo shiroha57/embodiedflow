@@ -1,0 +1,66 @@
+{
+  "action": {
+    "chunk_len": 20,
+    "dtype": "float32",
+    "representation": "joint_position_targets_then_gripper_width",
+    "shape": [
+      20,
+      7
+    ],
+    "unit": "rad,m"
+  },
+  "benchmark_label": null,
+  "checkpoint_format": "torch.save dict with keys: model_state_dict, optimizer_state_dict, scheduler_state_dict, scaler_state_dict, global_step, epoch, model_config, train_config, normalization, rng",
+  "checkpoint_sha256": "656fadd46dfeb87d326638ace7de1d7db99693e5ea04f961fb2dcaed2e0904de",
+  "contract_commit": "f526981d239ce6a0488b14b05bb28218665e121f",
+  "contract_version": "0.1.0",
+  "created_at": "2026-09-07T13:59:12.296631Z",
+  "cuda_version": "11.8",
+  "git_commit": "a818620d0f1e8d95847c94292cafe383e57aab57",
+  "image_preprocessing": "uint8_to_float32_divide_255",
+  "inputs": {
+    "rgb": {
+      "dtype": "float32",
+      "order": "CHW",
+      "range": [
+        0.0,
+        1.0
+      ],
+      "shape": [
+        3,
+        32,
+        32
+      ]
+    },
+    "robot_state": {
+      "composition": "joint_position | joint_velocity | gripper_position",
+      "dtype": "float32",
+      "shape": [
+        13
+      ]
+    }
+  },
+  "instruction_conditioning": "disabled",
+  "model_type": "chunked_action_transformer_minimal_v0",
+  "normalization": {
+    "applied_to": [
+      "robot_state",
+      "action"
+    ],
+    "eps": 1e-08,
+    "method": "z-score per dimension"
+  },
+  "observation_keys": [
+    "rgb",
+    "joint_position",
+    "joint_velocity",
+    "gripper_position"
+  ],
+  "robot_state_keys": [
+    "joint_position",
+    "joint_velocity",
+    "gripper_position"
+  ],
+  "run_id": "overfit-fixture-v0",
+  "torch_version": "2.7.1+cu118"
+}

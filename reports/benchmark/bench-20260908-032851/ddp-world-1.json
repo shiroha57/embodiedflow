@@ -1,0 +1,37 @@
+{
+  "label": "bench-20260908-032851",
+  "no_p2p": true,
+  "note": "pipeline benchmark on synthetic fixture; NOT final model results",
+  "per_rank": [
+    {
+      "amp": true,
+      "batch_size_per_rank": 8,
+      "benchmark_label": "bench-20260908-032851",
+      "chunk_len": 20,
+      "data_wait_ms_mean": 2.6391352829523385,
+      "data_wait_ms_std": 16.18599521784493,
+      "fixture": "fixtures/overfit",
+      "gpu_utilization_mean": 7.55,
+      "local_rank": 0,
+      "loss_mean": 3.1300981587171552,
+      "measure_steps": 100,
+      "mode": "benchmark",
+      "model_type": "chunked_action_transformer_minimal_v0",
+      "num_parameters": 139244,
+      "peak_memory_mb": 21.722112,
+      "physical_gpu": 0,
+      "rank": 0,
+      "samples_per_s": 404.75789026128837,
+      "step_time_ms_mean": 19.76490191416815,
+      "step_time_ms_std": 17.76445677613793,
+      "steps": 120,
+      "steps_per_s": 50.594736282661046,
+      "warmup_steps": 20,
+      "world_size": 1
+    }
+  ],
+  "physical_gpus": [
+    0
+  ],
+  "world_size": 1
+}

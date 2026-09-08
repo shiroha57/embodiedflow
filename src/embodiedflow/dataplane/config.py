@@ -51,6 +51,10 @@ class ModelConfig:
     cnn_stem: list[list[int]] = field(
         default_factory=lambda: [[16, 4, 2, 1], [32, 3, 2, 1], [64, 3, 2, 1]]
     )
+    # adaptive avg pool of the CNN feature map to pool_size x pool_size image
+    # tokens; required for large inputs (e.g. 256x256) to keep attention O(n^2)
+    # tractable. None = no pooling (fixture 32x32).
+    pool_size: int | None = None
 
 
 @dataclass

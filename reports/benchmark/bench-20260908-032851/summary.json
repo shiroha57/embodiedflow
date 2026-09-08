@@ -1,0 +1,72 @@
+{
+  "base_world": 1,
+  "label": "bench-20260908-032851",
+  "measure_steps": 100,
+  "note": "pipeline benchmark on synthetic fixture; NOT final model results",
+  "per_world": {
+    "1": {
+      "data_wait_ms_mean": 2.6391352829523385,
+      "global_samples_per_s": 404.75789026128837,
+      "gpu_utilization_mean": [
+        7.55
+      ],
+      "peak_memory_mb_per_rank": [
+        21.722112
+      ],
+      "physical_gpus": [
+        0
+      ],
+      "scaling_efficiency": 1.0,
+      "speedup_vs_1gpu": 1.0,
+      "step_time_ms_mean": 19.76490191416815,
+      "steps_per_s_per_rank": 50.594736282661046
+    },
+    "2": {
+      "data_wait_ms_mean": 4.993749891873449,
+      "global_samples_per_s": 626.9488983415829,
+      "gpu_utilization_mean": [
+        33.66,
+        3.89
+      ],
+      "peak_memory_mb_per_rank": [
+        21.722112,
+        21.722112
+      ],
+      "physical_gpus": [
+        0,
+        1
+      ],
+      "scaling_efficiency": 0.7744739675573228,
+      "speedup_vs_1gpu": 1.5489479351146456,
+      "step_time_ms_mean": 25.499687909614295,
+      "steps_per_s_per_rank": 39.216166234841026
+    },
+    "4": {
+      "data_wait_ms_mean": 10.75211183866486,
+      "global_samples_per_s": 992.3337193203286,
+      "gpu_utilization_mean": [
+        9.87,
+        6.31,
+        16.17,
+        9.69
+      ],
+      "peak_memory_mb_per_rank": [
+        21.722112,
+        21.722112,
+        21.722112,
+        21.722112
+      ],
+      "physical_gpus": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "scaling_efficiency": 0.6129180821402488,
+      "speedup_vs_1gpu": 2.451672328560995,
+      "step_time_ms_mean": 32.26694482611492,
+      "steps_per_s_per_rank": 30.991468370772438
+    }
+  },
+  "warmup_steps": 20
+}

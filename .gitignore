@@ -11,4 +11,4 @@ logs/
 
 artifacts/
 reports/
-data/
+/data/  # root-level real dataset dir only

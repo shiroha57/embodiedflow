@@ -2,7 +2,11 @@
 PY := /data5/ljt_data/conda_envs/embodiedflow/bin/python
 export PYTHONPATH := src
 
-.PHONY: test dataset-smoke overfit ddp-smoke benchmark
+# real-data entry points (used once 5090 Isaac episodes arrive)
+EPISODE ?= samples/episode_v0
+DATA ?= data/real_episodes
+
+.PHONY: test dataset-smoke overfit ddp-smoke benchmark quality-report manifest real-overfit
 
 test:
 	$(PY) -m pytest -q
@@ -18,3 +22,13 @@ ddp-smoke:
 
 benchmark:
 	$(PY) tools/run_benchmark.py --warmup-steps 20 --measure-steps 100
+
+quality-report:
+	$(PY) tools/episode_quality_report.py $(EPISODE)
+
+manifest:
+	$(PY) tools/episode_manifest.py $(DATA) --out artifacts/manifest/$(notdir $(DATA))
+
+real-overfit:
+	$(PY) -m embodiedflow.dataplane.train --fixture $(DATA) --gpu auto \
+		--run-id real-overfit-v0 --steps 1000 --pool-size 8

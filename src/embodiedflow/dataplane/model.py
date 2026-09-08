@@ -52,7 +52,12 @@ class ChunkedActionTransformerMinimal(nn.Module):
             feature_w = (feature_w + 2 * padding - kernel) // stride + 1
         if feature_h <= 0 or feature_w <= 0:
             raise ValueError("CNN stem over-shrinks the input; adjust cnn_stem")
-        self.num_image_tokens = feature_h * feature_w
+        self.pool_size = cfg.pool_size
+        self.num_image_tokens = (
+            cfg.pool_size * cfg.pool_size
+            if cfg.pool_size is not None
+            else feature_h * feature_w
+        )
 
         self.image_proj = nn.Linear(self.stem.out_channels, cfg.d_model)
         self.state_proj = nn.Linear(cfg.state_dim, cfg.d_model)
@@ -88,6 +93,10 @@ class ChunkedActionTransformerMinimal(nn.Module):
         """rgb [B,C,H,W], robot_state [B,S] -> action chunk [B,L,A]."""
         del padding_mask  # loss masking happens in the caller
         features = self.stem(rgb)
+        if self.pool_size is not None:
+            features = nn.functional.adaptive_avg_pool2d(
+                features, (self.pool_size, self.pool_size)
+            )
         image_tokens = features.flatten(2).transpose(1, 2)  # [B, N, C]
         image_tokens = self.image_proj(image_tokens)
         state_token = self.state_proj(robot_state).unsqueeze(1)  # [B, 1, D]

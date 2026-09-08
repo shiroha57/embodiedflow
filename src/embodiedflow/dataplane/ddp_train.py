@@ -112,11 +112,20 @@ def run_benchmark(
     measure_steps: int,
     amp: bool,
     grad_clip_norm: float,
+    profile: bool = False,
 ) -> dict:
     step_times: list[float] = []
     data_waits: list[float] = []
     losses: list[float] = []
     utils: list[float] = []
+
+    profiler = None
+    if profile:
+        profiler = torch.profiler.profile(
+            activities=[torch.profiler.ProfilerActivity.CUDA],
+            schedule=torch.profiler.schedule(wait=2, warmup=2, active=min(6, measure_steps)),
+        )
+        profiler.start()
 
     def one_step(batch: dict) -> float:
         rgb = batch["rgb"].to(device, non_blocking=True)
@@ -157,10 +166,17 @@ def run_benchmark(
             data_waits.append(t_data * 1e3)
             losses.append(loss)
             utils.append(float(torch.cuda.utilization(device)))
+        if profiler is not None:
+            profiler.step()
+
+    profile_summary = None
+    if profiler is not None:
+        profiler.stop()
+        profile_summary = _profile_summary(profiler)
 
     elapsed = sum(step_times) / 1e3
     samples = measure_steps * loader.batch_size
-    return {
+    result = {
         "measure_steps": measure_steps,
         "warmup_steps": warmup_steps,
         "batch_size_per_rank": loader.batch_size,
@@ -173,6 +189,32 @@ def run_benchmark(
         "loss_mean": sum(losses) / len(losses),
         "gpu_utilization_mean": sum(utils) / len(utils),
         "peak_memory_mb": torch.cuda.max_memory_allocated(device) / 1e6,
+    }
+    if profile_summary is not None:
+        result["profiler"] = profile_summary
+    return result
+
+
+def _profile_summary(profiler) -> dict:
+    """CUDA time split: nccl kernels (communication) vs everything else
+    (compute). Data-loading share is derived from wall-clock timing."""
+    nccl_ms = 0.0
+    other_ms = 0.0
+    for event in profiler.key_averages():
+        cuda_ms = sum(event.self_device_time_total) / 1e3
+        if not cuda_ms:
+            continue
+        if "nccl" in event.key.lower():
+            nccl_ms += cuda_ms
+        else:
+            other_ms += cuda_ms
+    total = nccl_ms + other_ms
+    return {
+        "total_cuda_ms": round(total, 3),
+        "nccl_kernel_ms": round(nccl_ms, 3),
+        "other_kernel_ms": round(other_ms, 3),
+        "comm_fraction": round(nccl_ms / total, 4) if total else None,
+        "compute_fraction": round(other_ms / total, 4) if total else None,
     }
 
 
@@ -196,6 +238,10 @@ def main() -> int:
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--gpus-physical", type=str, default="",
                         help="comma-separated physical GPU ids, e.g. 2,4,6")
+    parser.add_argument("--pool-size", type=int, default=None,
+                        help="adaptive-avg-pool CNN features to pool_size x pool_size image tokens")
+    parser.add_argument("--profile", action="store_true",
+                        help="run torch.profiler over measured steps; adds nccl/compute CUDA time split")
     parser.add_argument("--label", type=str, default="pipeline-benchmark")
     parser.add_argument("--report-root", type=Path, default=REPORTS_ROOT,
                         help="parent dir of <label>/ddp-world-<N>.json")
@@ -220,6 +266,8 @@ def main() -> int:
     model_cfg = ModelConfig()
     if args.chunk_len is not None:
         model_cfg.chunk_len = args.chunk_len
+    if args.pool_size is not None:
+        model_cfg.pool_size = args.pool_size
     train_cfg = TrainConfig()
     if args.lr is not None:
         train_cfg.lr = args.lr
@@ -231,6 +279,9 @@ def main() -> int:
     )
     model_cfg.state_dim = train_ds.state_dim
     model_cfg.action_dim = train_ds.action_dim
+    # image shape follows the data; probes the first sample so the stem's
+    # token count matches (e.g. 256x256 real episodes).
+    model_cfg.rgb_shape = tuple(int(d) for d in train_ds[0]["rgb"].shape)
     model = ChunkedActionTransformerMinimal(model_cfg).to(device)
     model = DDP(model, device_ids=[local_rank])
     optimizer = torch.optim.AdamW(model.parameters(), lr=train_cfg.lr, weight_decay=train_cfg.weight_decay)
@@ -242,6 +293,7 @@ def main() -> int:
         measure_steps=args.measure_steps if args.mode == "benchmark" else args.steps,
         amp=train_cfg.amp,
         grad_clip_norm=train_cfg.grad_clip_norm,
+        profile=args.profile,
     )
     result.update(
         {
@@ -256,9 +308,15 @@ def main() -> int:
             "num_parameters": sum(p.numel() for p in model.parameters()),
             "amp": train_cfg.amp,
             "chunk_len": dataset_cfg.chunk_len,
+            "rgb_shape": list(model_cfg.rgb_shape),
+            "pool_size": model_cfg.pool_size,
             "steps": args.steps,
         }
     )
+    if "profiler" in result and "data_wait_ms_mean" in result:
+        result["profiler"]["data_fraction"] = round(
+            result["data_wait_ms_mean"] / max(result["step_time_ms_mean"], 1e-9), 4
+        )
     if rank == 0:
         os.makedirs(args.report_root / args.label, exist_ok=True)
     dist.barrier()
@@ -270,7 +328,11 @@ def main() -> int:
             "label": args.label,
             "world_size": world_size,
             "per_rank": gathered,
-            "note": "pipeline benchmark on synthetic fixture; NOT final model results",
+            "note": (
+                "pipeline benchmark on synthetic fixture; NOT final model results"
+                if str(args.fixture) == "fixtures/overfit"
+                else "pipeline benchmark"
+            ),
             "physical_gpus": physical_ids,
             "no_p2p": True,
         }

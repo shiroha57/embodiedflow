@@ -1,0 +1,40 @@
+model:
+  model_type: chunked_action_transformer_minimal_v0
+  instruction_conditioning: disabled
+  rgb_shape:
+  - 3
+  - 32
+  - 32
+  state_dim: 13
+  action_dim: 7
+  chunk_len: 20
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.0
+  cnn_stem:
+  - - 16
+    - 4
+    - 2
+    - 1
+  - - 32
+    - 3
+    - 2
+    - 1
+  - - 64
+    - 3
+    - 2
+    - 1
+train:
+  steps: 400
+  lr: 0.0003
+  weight_decay: 0.0001
+  grad_clip_norm: 1.0
+  amp: true
+  seed: 0
+  log_every: 50
+  eval_every: 200
+  save_every: 200
+  warmup_steps: 100
+  scheduler: cosine
+  run_id: overfit-fixture-v0

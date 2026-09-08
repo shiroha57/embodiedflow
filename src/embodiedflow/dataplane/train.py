@@ -105,6 +105,10 @@ def train(
 
     model_cfg.state_dim = train_ds.state_dim
     model_cfg.action_dim = train_ds.action_dim
+    # image shape follows the data (e.g. 256x256 Isaac episodes); the stem's
+    # token count must match, so probe the first sample instead of trusting
+    # the config default.
+    model_cfg.rgb_shape = tuple(int(d) for d in train_ds[0]["rgb"].shape)
     model = ChunkedActionTransformerMinimal(model_cfg).to(device)
 
     train_loader = make_dataloader(
@@ -245,6 +249,8 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--chunk-len", type=int, default=None)
+    parser.add_argument("--pool-size", type=int, default=None,
+                        help="adaptive-avg-pool CNN features to pool_size x pool_size image tokens")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--amp", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--run-id", type=str, default=None)
@@ -271,6 +277,8 @@ def main() -> int:
     model_cfg = ModelConfig()
     if args.chunk_len is not None:
         model_cfg.chunk_len = args.chunk_len
+    if args.pool_size is not None:
+        model_cfg.pool_size = args.pool_size
     train_cfg = TrainConfig()
     if args.steps is not None:
         train_cfg.steps = args.steps
