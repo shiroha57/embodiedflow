@@ -10,6 +10,18 @@
 - headless EGL 相机渲染仅为硬件环境证明，不是正式数据源，也不是 Isaac Sim 验收；
 - 4090 只做离线验证，闭环成功率由 5090 测量。
 
+**交付状态（三件事严格区分，不得混写）**：
+
+| 事项 | 状态 | 证据 / 说明 |
+|---|---|---|
+| **checkpoint load protocol**（import 包 / sha256 校验 / 模型重建 / [1,20,7] 样例推理） | **PASS** | 全新 clone + 全新 venv 日志：[reports/load-protocol/fresh-env-verify.log](../../reports/load-protocol/fresh-env-verify.log)（verified @ ff529e7） |
+| **GPU inference**（5090 实际 GPU 加载与推理） | **pending** | 等 5090 侧执行 |
+| **real Isaac policy effectiveness**（真实数据训练与策略有效性，含闭环成功率） | **pending** | 等真实 Isaac episode；闭环由 5090 测量 |
+
+load protocol PASS 只证明**格式兼容**（样例是 32×32 合成 fixture 的过拟合
+checkpoint，见 docs/4090/checkpoint_handoff.md），**不代表策略有效**，
+也不代表已在 5090 GPU 上跑通。
+
 ## 环境
 
 - conda env: `/data5/ljt_data/conda_envs/embodiedflow`（torch 2.7.1+cu118, mujoco 2.3.7, pynvml）
