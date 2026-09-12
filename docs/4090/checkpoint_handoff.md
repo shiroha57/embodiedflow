@@ -49,13 +49,17 @@ embodiedflow/dataplane/model.py
 
 外加 `model.pt` + `model_manifest.json`。
 
-- 运行时依赖：**torch、pyyaml**（config.py 顶层 `import yaml`）；
-  建议 `pip install torch --index-url https://download.pytorch.org/whl/cpu pyyaml`
-- **不需要** `dataset.py` / `stats.py` / `checkpoint.py` / numpy / jsonschema：
+- 运行时依赖：**torch、pyyaml、numpy>=2**（config.py 顶层 `import yaml`）；
+  建议 `pip install torch --index-url https://download.pytorch.org/whl/cpu pyyaml "numpy>=2"`
+- numpy 只在 `torch.load` 反序列化时需要：`rng` 字段内嵌 numpy 2.x 序列化的
+  RNG 数组；numpy 1.x 会报 `ModuleNotFoundError: No module named 'numpy._core'`。
+  仅 import 包、sha256 校验和重建模型结构本身不需要 numpy
+- **不需要** `dataset.py` / `stats.py` / `checkpoint.py` / jsonschema：
   `dataplane/__init__.py` 不做 eager 子模块导入（回归测试
-  tests/test_package_layout.py 在只有上述 4 个文件的临时目录中跑通完整
-  加载路径；numpy 若出现在 `sys.modules` 是 torch 自身导入链所致，与本包无关）
-- 需要训练/数据工具（validator、Dataset、训练入口）时才需要完整仓库 + numpy/jsonschema
+  tests/test_package_layout.py 在只有上述 4 个文件的临时目录中跑通完整加载路径）
+- 本协议已在全新 venv（python 3.10 / torch 2.3.0+cu121 / numpy 2.2.6 / pyyaml）
+  中，对完整 clone 和仅含上述 4 个源文件的最小 bundle 分别端到端验证通过
+- 需要训练/数据工具（validator、Dataset、训练入口）时才需要完整仓库 + jsonschema
 
 ## 5090 最小加载命令（协议测试）
 
@@ -101,5 +105,9 @@ normalization.json / config.yaml / metrics.json 供人工核对。
   与训练代码版本无关
 - 本模型无语言通路（`instruction_conditioning="disabled"`），
   输入接口只有 rgb + robot_state
-- 若 5090 加载遇到 `weights_only` 报错或 dataclass 兼容问题，请反馈具体
+- 自本次修复起，`model_manifest.json` 新增 `numpy_version` 字段（导出环境的
+  numpy 版本，即 model.pt 的数值 pickle ABI 要求）；本交付样例的 manifest
+  导出于该字段加入之前，实测加载环境需 numpy>=2
+- 若 5090 加载遇到 `weights_only` 报错、`No module named 'numpy._core'`
+  （numpy < 2，按上面依赖装 numpy>=2）或 dataclass 兼容问题，请反馈具体
   报错；协议以本文件为唯一交付契约

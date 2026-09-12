@@ -62,6 +62,7 @@ def test_export_file_set_and_manifest(tmp_path: Path):
     assert manifest["image_preprocessing"] == "uint8_to_float32_divide_255"
     assert manifest["normalization"]["method"] == "z-score per dimension"
     assert manifest["torch_version"] == torch.__version__
+    assert manifest["numpy_version"] == np.__version__
     assert manifest["inputs"]["rgb"]["range"] == [0.0, 1.0]
 
     expected_sha = hashlib.sha256((tmp_path / "model.pt").read_bytes()).hexdigest()

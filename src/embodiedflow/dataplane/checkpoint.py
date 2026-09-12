@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import torch
 
 from embodiedflow.dataplane.config import ModelConfig, TrainConfig, save_json, save_yaml, to_dict
@@ -141,6 +142,7 @@ def build_manifest(
         },
         "torch_version": torch.__version__,
         "cuda_version": torch.version.cuda,
+        "numpy_version": np.__version__,
         "checkpoint_format": "torch.save dict with keys: " + ", ".join(SAVED_KEYS),
         "checkpoint_sha256": hashlib.sha256(model_pt_path.read_bytes()).hexdigest(),
         "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -225,7 +227,6 @@ def capture_rng(dataloader=None, batches_consumed: int = 0) -> dict:
         "python": None,
         "dataloader": None,
     }
-    import numpy as np
     import random
 
     rng["numpy"] = np.random.get_state()
@@ -239,7 +240,6 @@ def capture_rng(dataloader=None, batches_consumed: int = 0) -> dict:
 
 
 def restore_rng(rng: dict, dataloader=None) -> None:
-    import numpy as np
     import random
 
     torch.set_rng_state(rng["torch"])
