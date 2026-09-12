@@ -19,12 +19,16 @@ import json
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 
 from embodiedflow.dataplane.config import ModelConfig, TrainConfig, save_json, save_yaml, to_dict
-from embodiedflow.dataplane.stats import NormStats
+
+if TYPE_CHECKING:
+    # annotation-only: keeping stats/numpy out of the runtime import graph so
+    # the 5090 load bundle needs only model.py + config.py
+    from embodiedflow.dataplane.stats import NormStats
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_VERSION = "0.1.0"

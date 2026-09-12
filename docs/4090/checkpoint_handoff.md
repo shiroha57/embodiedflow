@@ -36,6 +36,27 @@ normalization, rng
 - action 语义（contract-v0.1）：`[chunk_len, J+1]`，前 J 列关节目标(rad)，
   末列夹爪宽度(m)，z-score 归一化，`normalization.json` 中给均值和标准差
 
+## 最小 bundle 与依赖（重要）
+
+官方加载路径**只需要**以下源码文件（已随分支提交）：
+
+```
+embodiedflow/__init__.py
+embodiedflow/dataplane/__init__.py
+embodiedflow/dataplane/config.py
+embodiedflow/dataplane/model.py
+```
+
+外加 `model.pt` + `model_manifest.json`。
+
+- 运行时依赖：**torch、pyyaml**（config.py 顶层 `import yaml`）；
+  建议 `pip install torch --index-url https://download.pytorch.org/whl/cpu pyyaml`
+- **不需要** `dataset.py` / `stats.py` / `checkpoint.py` / numpy / jsonschema：
+  `dataplane/__init__.py` 不做 eager 子模块导入（回归测试
+  tests/test_package_layout.py 在只有上述 4 个文件的临时目录中跑通完整
+  加载路径；numpy 若出现在 `sys.modules` 是 torch 自身导入链所致，与本包无关）
+- 需要训练/数据工具（validator、Dataset、训练入口）时才需要完整仓库 + numpy/jsonschema
+
 ## 5090 最小加载命令（协议测试）
 
 ```python
