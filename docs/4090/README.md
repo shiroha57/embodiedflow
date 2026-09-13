@@ -119,6 +119,9 @@ checkpoint 内 `normalization` 随模型一起交付（normalization.json），
 
 ## 真实 Isaac 数据入口（待 5090 数据到达）
 
+Isaac Lab（5090 官方任务）适配审计（硬编码清单/需修改项/缺失输入）：
+[isaaclab_adapter_audit.md](isaaclab_adapter_audit.md)。
+
 Dataset 对任意 H×W uint8 RGB（含 256×256）与 contract 真实 state/action
 天然支持（mmap 读取，无 32×32 硬编码）；模型侧 `rgb_shape` 在 train/ddp
 入口自动跟随首个样本，大图需 `--pool-size`（如 256×256 建议 8）控制
@@ -131,7 +134,7 @@ transformer token 数。真实数据到达后按序执行：
    → `<out>/episode_manifest.json`（逐 episode 质量摘要，rejected 列表）
    + `split.json`（episode 级 train/val，无帧泄漏）
 3. **1 条 episode Dataset smoke**：
-   `python -m embodiedflow.dataplane.smoke --fixture <real_data_dir> --chunk-len 20 --batch-size 4`
+   `python -m embodiedflow.dataplane.smoke --episodes <real_data_dir> --chunk-len 20 --batch-size 4`
 4. **10-20 episode 真实数据 overfit**：
    `make real-overfit DATA=<real_data_dir>`（`--pool-size 8`，400-1000 步，
    过拟合判定：train loss 显著低于初始，见 test_overfit_on_tiny_fixture 同款标准）
